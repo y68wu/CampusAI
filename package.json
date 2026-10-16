@@ -1,0 +1,55 @@
+{
+  "name": "waterloo-course-planner-ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Waterloo course planning assistant with cited prerequisite guidance.",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "tsx watch src/server/index.ts",
+    "dev:client": "vite --host 0.0.0.0",
+    "build": "tsc -p tsconfig.server.json && vite build",
+    "start": "node build/server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "eval": "tsx evaluation/run.ts",
+    "mcp": "tsx src/server/mcp/stdio.ts",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit"
+  },
+  "dependencies": {
+    "@apollo/server": "^5.3.0",
+    "@as-integrations/express5": "^1.1.2",
+    "@langchain/openai": "^1.6.2",
+    "@modelcontextprotocol/client": "^2.3.1",
+    "@modelcontextprotocol/express": "^2.0.2",
+    "@modelcontextprotocol/node": "^2.1.1",
+    "@modelcontextprotocol/server": "^2.3.1",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "graphql": "^16.11.0",
+    "langchain": "^1.5.18",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.1.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.2",
+    "vitest": "^4.0.8"
+  },
+  "allowScripts": {
+    "@apollo/protobufjs@1.2.8": true,
+    "esbuild@0.28.2": true
+  }
+}

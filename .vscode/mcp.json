@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "waterloo-course-planner": {
+      "type": "http",
+      "url": "http://localhost:4000/mcp"
+    }
+  }
+}
