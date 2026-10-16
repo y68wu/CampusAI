@@ -94,7 +94,7 @@ Provision with the Azure CLI after selecting your subscription and resource grou
 
 ### GitHub Actions deployment
 
-`.github/workflows/ci.yml` runs typecheck, tests, the synthetic evaluation, and production build. `.github/workflows/deploy-azure.yml` builds and deploys the image on pushes to `main` after you provision Azure resources. Configure repository secrets:
+`.github/workflows/ci.yml` runs typecheck, tests, the synthetic evaluation, and production build. After you provision Azure resources and configure the repository secrets below, run `.github/workflows/deploy-azure.yml` manually from the Actions tab to build and deploy the image:
 
 - `AZURE_CREDENTIALS` — service-principal JSON accepted by `azure/login`.
 - `AZURE_ACR_NAME` — registry resource name, without `.azurecr.io`.
