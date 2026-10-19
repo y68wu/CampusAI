@@ -7,6 +7,12 @@ import {
   Send, Sparkles, SquarePen, Target,
 } from "lucide-react";
 import type { AppStatus, Course } from "../shared/types.js";
+import {
+  answerStaticQuestion,
+  searchStaticCourses,
+  STATIC_DEMO_ENABLED,
+  staticDemoStatus,
+} from "./static-demo.js";
 
 type View = "Dashboard" | "Semester Planner" | "Course Search" | "Degree Progress";
 type Source = { label: string; url: string; courseCode?: string };
@@ -34,6 +40,9 @@ const initialMessage: Message = {
 };
 
 async function graphQL<T>(query: string, variables: Record<string, unknown>): Promise<T> {
+  if (STATIC_DEMO_ENABLED && query.includes("SearchCourses")) {
+    return { courses: searchStaticCourses(String(variables.search ?? "")) } as T;
+  }
   const response = await fetch("/graphql", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -110,17 +119,23 @@ function ChatPanel({
     setError("");
     setBusy(true);
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          question: prompt,
-          completedCourses: courseInput.split(/[\n,;]+/).map((code) => code.trim()).filter(Boolean),
-          messages: messages.filter((_, index) => index > 0).slice(-10).map(({ role, content }) => ({ role, content })),
-        }),
-      });
-      const result = await response.json() as Message & { answer?: string; error?: string };
-      if (!response.ok) throw new Error(result.error ?? "The assistant couldn't answer just now.");
+      const completed = courseInput.split(/[\n,;]+/).map((code) => code.trim()).filter(Boolean);
+      let result: Omit<Message, "role" | "content"> & { answer?: string; content?: string; error?: string };
+      if (STATIC_DEMO_ENABLED) {
+        result = await answerStaticQuestion(prompt, completed);
+      } else {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            question: prompt,
+            completedCourses: completed,
+            messages: messages.filter((_, index) => index > 0).slice(-10).map(({ role, content }) => ({ role, content })),
+          }),
+        });
+        result = await response.json() as Message & { answer?: string; error?: string };
+        if (!response.ok) throw new Error(result.error ?? "The assistant couldn't answer just now.");
+      }
       setMessages((current) => [...current, { ...result, role: "assistant", content: result.answer ?? result.content ?? "I couldn't produce an answer." }]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not connect to Campus AI.");
@@ -165,7 +180,7 @@ function ChatPanel({
                   ))}
                 </div>
               )}
-              {message.toolCalls && message.toolCalls.length > 0 && <div className="tool-note"><CheckCircle2 size={13} /> MCP tool call · {message.latencyMs} ms{message.mode === "langchain-agent" ? " · LangChain agent" : " · deterministic demo"}</div>}
+              {message.toolCalls && message.toolCalls.length > 0 && <div className="tool-note"><CheckCircle2 size={13} /> {message.toolCalls.some((name) => name.startsWith("static_demo_")) ? "Browser demo tool" : "MCP tool call"} · {message.latencyMs} ms{message.mode === "langchain-agent" ? " · LangChain agent" : " · deterministic demo"}</div>}
             </div>
           </div>
         ))}
@@ -240,7 +255,8 @@ export default function App() {
 
   useEffect(() => {
     let alive = true;
-    void fetch("/api/status").then(async (response) => {
+    if (STATIC_DEMO_ENABLED) setStatus(staticDemoStatus);
+    else void fetch("/api/status").then(async (response) => {
       if (!response.ok) throw new Error("API offline");
       return await response.json() as AppStatus;
     }).then((value) => { if (alive) setStatus(value); }).catch(() => { if (alive) setStatusError("Start the development server to connect the course API."); });
@@ -263,6 +279,7 @@ export default function App() {
       <main className="main-shell">
         <header className="topbar"><div className="breadcrumb"><span>Workspace</span><span className="crumb-slash">/</span><b>{activeView}</b></div><div className="topbar-right"><span className="date-label"><Clock3 size={15} /> {dateLabel}</span><button className="help-button"><CircleHelp size={16} /><span>Help</span></button><span className="top-avatar">{firstName[0]?.toUpperCase() ?? "E"}</span></div></header>
         <div className="main-content">
+          {STATIC_DEMO_ENABLED && <div className="connection-banner"><CircleHelp size={15} /> Interactive GitHub Pages demo: answers use labeled fixtures and deterministic browser-side checks, not live enrollment data.</div>}
           {statusError && <div className="connection-banner"><CircleHelp size={15} /> {statusError} Check that the API is running on port 4000.</div>}
           {activeView === "Dashboard" && <>
             <section className="welcome-row"><div><div className="eyebrow">{dateLabel.toUpperCase()} <span className="eyebrow-dot">✦</span> YOUR ACADEMIC SNAPSHOT</div><h1>Good afternoon, {firstName}<span className="heading-period">.</span></h1><p>Make your next academic decision with a little more clarity.</p></div><button className="term-selector" onClick={() => setActiveView("Semester Planner")}><span className="term-icon"><CalendarDays size={16} /></span><span><small>PLANNING FOR</small><b>{status?.activeTerm.name ?? "Fall 2026"}</b></span><ChevronDown size={15} /></button></section>

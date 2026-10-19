@@ -2,6 +2,10 @@
 
 A full-stack academic-planning prototype based on the Campus AI Week 11 Figma study. It turns the research insight — *students need to trust where AI advice comes from* — into a working course lookup and prerequisite-checking experience.
 
+**Interactive web demo:** https://y68wu.github.io/CampusAI/
+
+The GitHub Pages build is a clearly labeled, browser-side deterministic demo backed by the small fixture in this repository. It lets reviewers try course search and prerequisite questions without credentials, but it is not live Waterloo data and does not run the hosted LangChain model. The full local/Azure build retains the Node.js, GraphQL, MCP, and optional LangChain agent paths described below.
+
 > **Important:** Until a Waterloo Open Data API key is configured, the app runs on a small, explicitly labelled demo fixture. Demo prerequisite checks are always returned as **unverified**. The fixture is not an official catalog and must not be used to make enrollment decisions.
 
 ## What works

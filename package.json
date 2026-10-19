@@ -9,6 +9,7 @@
     "dev:server": "tsx watch src/server/index.ts",
     "dev:client": "vite --host 0.0.0.0",
     "build": "tsc -p tsconfig.server.json && vite build",
+    "build:pages": "VITE_STATIC_DEMO=true VITE_BASE_PATH=/CampusAI/ vite build",
     "start": "node build/server/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
